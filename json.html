@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON 포맷터 & 검증기 - 무료 온라인 도구</title> <link rel="stylesheet" href="css/style.css">
+    <script src="js/common.js"></script>
+
+    <style>
+        /* 에디터 영역을 좌우로 배치 */
+        .editor-wrapper {
+            display: flex;
+            gap: 15px;
+            height: 60vh; /* 화면 높이에 맞춤 */
+            min-height: 400px;
+        }
+        
+        .editor-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .editor-col label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        textarea {
+            flex: 1; /* 부모 높이 꽉 채우기 */
+            resize: none;
+            padding: 15px;
+            font-family: 'Consolas', monospace; /* 코드용 폰트 */
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            outline: none;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        textarea:focus {
+            border-color: #3498db;
+        }
+
+        /* 버튼 그룹 스타일 */
+        .controls {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        /* 상태 메시지 (에러/성공) */
+        #status {
+            text-align: center;
+            margin-bottom: 10px;
+            font-weight: bold;
+            height: 20px; /* 메시지 없을 때도 공간 유지 */
+        }
+        .error { color: #e74c3c; }
+        .success { color: #27ae60; }
+
+        /* 모바일에서는 위아래로 배치 */
+        @media (max-width: 768px) {
+            .editor-wrapper {
+                flex-direction: column;
+                height: auto;
+            }
+            textarea {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="tool-box">
+            <h2 style="text-align: center; margin-top: 0;">📋 JSON 포맷터 & 검증기</h2>
+            <p style="text-align: center; color: #666; margin-bottom: 20px;">
+                복잡한 JSON 코드를 보기 좋게 정렬하거나 압축하세요.
+            </p>
+
+            <div class="controls">
+                <button onclick="formatJSON()">✨ 정렬 (Beautify)</button>
+                <button onclick="minifyJSON()" style="background-color: #7f8c8d;">📦 압축 (Minify)</button>
+                <button onclick="copyResult()" style="background-color: #27ae60;">📋 결과 복사</button>
+                <button onclick="clearAll()" style="background-color: #e74c3c;">🗑️ 지우기</button>
+            </div>
+
+            <div id="status"></div>
+
+            <div class="editor-wrapper">
+                <div class="editor-col">
+                    <label for="inputJson">입력 (Input)</label>
+                    <textarea id="inputJson" placeholder='여기에 JSON을 붙여넣으세요. 예: {"id":1,"name":"Test"}'></textarea>
+                </div>
+                <div class="editor-col">
+                    <label for="outputJson">결과 (Output)</label>
+                    <textarea id="outputJson" readonly placeholder="결과가 여기에 표시됩니다."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 50px; line-height: 1.8; color: #444;">
+            <h3>JSON 포맷터란?</h3>
+            <p>
+                JSON(JavaScript Object Notation)은 데이터를 주고받을 때 가장 많이 사용되는 형식입니다. 
+                하지만 서버 로그나 API 응답값은 보통 공백 없이 뭉쳐져 있어(Minified) 사람이 읽기 어렵습니다.
+            </p>
+            <p>
+                이 도구를 사용하면 뭉쳐진 JSON 코드를 <strong>들여쓰기가 적용된 예쁜 형태(Prettified)</strong>로 변환하여 쉽게 분석할 수 있습니다.
+                또한, 문법 오류가 있는 경우 어디가 틀렸는지 알려주는 <strong>검증(Validation)</strong> 기능도 포함되어 있습니다.
+            </p>
+            
+            <h3>사용 방법</h3>
+            <ul>
+                <li><strong>정렬 (Beautify):</strong> 왼쪽 입력창에 JSON을 넣고 버튼을 누르면 읽기 좋게 변환됩니다.</li>
+                <li><strong>압축 (Minify):</strong> 불필요한 공백을 모두 제거하여 용량을 줄입니다.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const inputEl = document.getElementById('inputJson');
+        const outputEl = document.getElementById('outputJson');
+        const statusEl = document.getElementById('status');
+
+        function formatJSON() {
+            const raw = inputEl.value.trim();
+            if(!raw) return setStatus("내용을 입력해주세요.", "error");
+
+            try {
+                const parsed = JSON.parse(raw);
+                outputEl.value = JSON.stringify(parsed, null, 2); // 2칸 들여쓰기
+                setStatus("성공적으로 정렬되었습니다! (Valid JSON)", "success");
+            } catch (e) {
+                setStatus("유효하지 않은 JSON입니다: " + e.message, "error");
+            }
+        }
+
+        function minifyJSON() {
+            const raw = inputEl.value.trim();
+            if(!raw) return setStatus("내용을 입력해주세요.", "error");
+
+            try {
+                const parsed = JSON.parse(raw);
+                outputEl.value = JSON.stringify(parsed); // 공백 제거
+                setStatus("성공적으로 압축되었습니다!", "success");
+            } catch (e) {
+                setStatus("유효하지 않은 JSON입니다: " + e.message, "error");
+            }
+        }
+
+        function copyResult() {
+            if(!outputEl.value) return setStatus("복사할 결과가 없습니다.", "error");
+            outputEl.select();
+            document.execCommand('copy');
+            setStatus("클립보드에 복사되었습니다.", "success");
+        }
+
+        function clearAll() {
+            inputEl.value = "";
+            outputEl.value = "";
+            setStatus("", "");
+            inputEl.focus();
+        }
+
+        function setStatus(msg, type) {
+            statusEl.textContent = msg;
+            statusEl.className = type;
+        }
+    </script>
+</body>
+</html>

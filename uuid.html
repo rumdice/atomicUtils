@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>UUID 생성기 - 무료 온라인 툴</title> <link rel="stylesheet" href="css/style.css">
+    <script src="js/common.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="tool-box" style="text-align: center;">
+            <h2>🔑 랜덤 UUID 생성기</h2>
+            <p>버튼을 누르면 새로운 UUID가 생성됩니다.</p>
+            
+            <input type="text" id="uuidResult" style="width: 80%; text-align: center;" readonly>
+            <br><br>
+            <button onclick="generate()">생성하기</button>
+            <button onclick="copy()" style="background-color: #27ae60;">복사하기</button>
+        </div>
+
+        <div style="margin-top: 40px; line-height: 1.6;">
+            <h3>UUID란?</h3>
+            <p>범용 고유 식별자(Universally Unique Identifier)는 네트워크 상에서 중복되지 않는 ID를 만들기 위한 표준입니다...</p>
+        </div>
+    </div>
+
+    <script>
+        // 이 페이지 전용 스크립트
+        function generate() {
+            document.getElementById('uuidResult').value = crypto.randomUUID();
+        }
+        function copy() {
+            const el = document.getElementById('uuidResult');
+            el.select();
+            document.execCommand('copy');
+            alert('복사되었습니다!');
+        }
+        generate(); // 접속 시 자동 생성
+    </script>
+</body>
+</html>
