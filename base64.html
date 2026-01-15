@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base64 인코더 & 디코더 - 무료 온라인 변환</title>
+    
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/common.js"></script>
+
+    <style>
+        .converter-wrapper { display: flex; flex-direction: column; gap: 20px; }
+        .box-group { display: flex; gap: 20px; }
+        .box { flex: 1; display: flex; flex-direction: column; }
+        label { font-weight: bold; margin-bottom: 8px; color: #555; }
+        textarea {
+            height: 200px; padding: 15px; resize: vertical;
+            border: 1px solid #ccc; border-radius: 5px; font-family: monospace;
+        }
+        .actions { display: flex; justify-content: center; gap: 10px; margin: 10px 0; }
+        
+        /* 모바일 대응 */
+        @media (max-width: 768px) {
+            .box-group { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="tool-box">
+            <h2 style="text-align: center;">🔄 Base64 변환기</h2>
+            <p style="text-align: center; color: #666; margin-bottom: 30px;">
+                텍스트를 Base64로 인코딩하거나, Base64 문자열을 텍스트로 디코딩하세요.<br>
+                (UTF-8 한글도 완벽하게 지원합니다.)
+            </p>
+
+            <div class="converter-wrapper">
+                <div class="box-group">
+                    <div class="box">
+                        <label for="TextInput">일반 텍스트 (Plain Text)</label>
+                        <textarea id="TextInput" placeholder="안녕하세요 Hello World"></textarea>
+                    </div>
+                    
+                    <div style="display:flex; align-items:center; justify-content:center; font-size:24px; color:#aaa;">
+                        ⇄
+                    </div>
+
+                    <div class="box">
+                        <label for="Base64Input">Base64 문자열</label>
+                        <textarea id="Base64Input" placeholder="7JWI64WV7ZWY7IS4dW8gSGVsbG8gV29ybGQ="></textarea>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button onclick="encode()" class="btn-primary">⬇️ 인코딩 (Encode)</button>
+                    <button onclick="decode()" class="btn-success">⬆️ 디코딩 (Decode)</button>
+                    <button onclick="clearAll()" style="background-color:#e74c3c;">🗑️ 지우기</button>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 50px; line-height: 1.6; color: #444;">
+            <h3>Base64란?</h3>
+            <p>바이너리 데이터(이미지, 파일 등)를 ASCII 문자열로 바꾸는 인코딩 방식입니다. 주로 이메일 첨부파일 전송이나, 웹 API 인증(Basic Auth) 등에 사용됩니다.</p>
+        </div>
+    </div>
+
+    <script>
+        const textInput = document.getElementById('TextInput');
+        const base64Input = document.getElementById('Base64Input');
+
+        // UTF-8 문자열을 Base64로 인코딩 (한글 처리용)
+        function utf8_to_b64(str) {
+            return window.btoa(unescape(encodeURIComponent(str)));
+        }
+
+        // Base64를 UTF-8 문자열로 디코딩 (한글 처리용)
+        function b64_to_utf8(str) {
+            return decodeURIComponent(escape(window.atob(str)));
+        }
+
+        function encode() {
+            const val = textInput.value;
+            if(!val) return alert("텍스트를 입력해주세요.");
+            try {
+                base64Input.value = utf8_to_b64(val);
+            } catch (e) {
+                alert("인코딩 실패: " + e.message);
+            }
+        }
+
+        function decode() {
+            const val = base64Input.value.trim();
+            if(!val) return alert("Base64 문자열을 입력해주세요.");
+            try {
+                textInput.value = b64_to_utf8(val);
+            } catch (e) {
+                alert("유효하지 않은 Base64 문자열입니다.");
+            }
+        }
+
+        function clearAll() {
+            textInput.value = "";
+            base64Input.value = "";
+            textInput.focus();
+        }
+    </script>
+</body>
+</html>

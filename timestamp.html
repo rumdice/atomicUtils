@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unix 타임스탬프 변환기 - Timestamp Converter</title>
+    
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/common.js"></script>
+
+    <style>
+        /* 현재 시간 보여주는 하이라이트 박스 */
+        .current-time-box {
+            background-color: #e8f4fd;
+            border: 2px solid #3498db;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .current-time-box .big-text {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2c3e50;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+        .current-time-box .sub-text { color: #7f8c8d; }
+
+        /* 변환기 섹션 스타일 */
+        .converter-section {
+            border-top: 1px solid #eee;
+            padding: 20px 0;
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+        
+        .section-part { flex: 1; }
+        .section-title { font-weight: bold; margin-bottom: 10px; font-size: 18px; color: #34495e; }
+        
+        input[type="text"], input[type="number"], input[type="datetime-local"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        .result-box {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            margin-top: 10px;
+            font-family: monospace;
+            font-weight: bold;
+            color: #27ae60;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            word-break: break-all;
+        }
+
+        @media (max-width: 768px) {
+            .converter-section { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="tool-box">
+            <h2 style="text-align: center; margin-top: 0;">⏱️ Unix 타임스탬프 변환기</h2>
+            
+            <div class="current-time-box">
+                <div class="sub-text">현재 Unix Timestamp (Seconds)</div>
+                <div class="big-text" id="nowTimestamp">...</div>
+                <div id="nowDateString" style="color: #555;">...</div>
+                <button onclick="copyNow()" style="margin-top: 10px; padding: 5px 15px; font-size: 14px;">현재 시간 복사</button>
+            </div>
+
+            <div class="converter-section">
+                <div class="section-part">
+                    <div class="section-title">Timestamp ➡️ 날짜 변환</div>
+                    <input type="number" id="tsInput" placeholder="예: 1704067200 (초 또는 밀리초)">
+                    <button onclick="convertTsToDate()" class="btn-primary" style="width: 100%;">변환하기</button>
+                    <div id="dateResult" class="result-box">결과가 여기에 표시됩니다.</div>
+                    <p style="font-size: 12px; color: #888;">* 10자리(초), 13자리(밀리초) 자동 감지</p>
+                </div>
+
+                <div class="section-part">
+                    <div class="section-title">날짜 ➡️ Timestamp 변환</div>
+                    <input type="datetime-local" id="dateInput">
+                    <button onclick="convertDateToTs()" class="btn-success" style="width: 100%;">변환하기</button>
+                    <div id="tsResult" class="result-box">결과가 여기에 표시됩니다.</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 40px; line-height: 1.6; color: #444;">
+            <h3>Unix Timestamp란?</h3>
+            <p>1970년 1월 1일 00:00:00 UTC를 기준으로 경과한 시간을 '초(Seconds)' 단위로 나타낸 정수입니다. 전 세계 모든 컴퓨터 시스템에서 시간의 기준점으로 사용됩니다.</p>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. 실시간 시계 로직 ---
+        function updateClock() {
+            const now = new Date();
+            const ts = Math.floor(now.getTime() / 1000); // 초 단위
+            document.getElementById('nowTimestamp').innerText = ts;
+            document.getElementById('nowDateString').innerText = now.toLocaleString();
+        }
+        setInterval(updateClock, 1000); // 1초마다 갱신
+        updateClock(); // 로딩 즉시 실행
+
+        function copyNow() {
+            const val = document.getElementById('nowTimestamp').innerText;
+            navigator.clipboard.writeText(val);
+            alert("현재 타임스탬프가 복사되었습니다: " + val);
+        }
+
+        // --- 2. Timestamp -> 날짜 변환 로직 ---
+        function convertTsToDate() {
+            let val = document.getElementById('tsInput').value.trim();
+            const resultBox = document.getElementById('dateResult');
+            
+            if(!val) return resultBox.innerText = "숫자를 입력해주세요.";
+
+            // 입력값이 숫자인지 확인
+            let ts = Number(val);
+            if(isNaN(ts)) return resultBox.innerText = "유효한 숫자가 아닙니다.";
+
+            // [자동 감지] 10자리 이하면 초(sec), 그 이상이면 밀리초(ms)로 가정
+            // 보통 2000년대 타임스탬프는 10자리(초) 또는 13자리(밀리초)임
+            let isSeconds = false;
+            if(val.length <= 10) {
+                ts = ts * 1000; // 밀리초로 변환
+                isSeconds = true;
+            }
+
+            const date = new Date(ts);
+            
+            // 날짜 포맷팅 (YYYY-MM-DD HH:mm:ss)
+            const formatted = formatDate(date);
+            
+            // 결과 출력 (GMT 정보 포함)
+            resultBox.innerHTML = `
+                Local: ${formatted}<br>
+                <span style="font-size:12px; color:#666;">(${isSeconds ? '초 단위 감지됨' : '밀리초 단위 감지됨'})</span>
+            `;
+        }
+
+        // --- 3. 날짜 -> Timestamp 변환 로직 ---
+        function convertDateToTs() {
+            const val = document.getElementById('dateInput').value;
+            const resultBox = document.getElementById('tsResult');
+
+            if(!val) return resultBox.innerText = "날짜를 선택해주세요.";
+
+            const date = new Date(val);
+            const ts = Math.floor(date.getTime() / 1000); // 초 단위 변환
+
+            resultBox.innerText = ts;
+        }
+
+        // 날짜 포맷 헬퍼 함수
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hour = String(date.getHours()).padStart(2, '0');
+            const min = String(date.getMinutes()).padStart(2, '0');
+            const sec = String(date.getSeconds()).padStart(2, '0');
+            return `${year}-${month}-${day} ${hour}:${min}:${sec}`;
+        }
+    </script>
+</body>
+</html>

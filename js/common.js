@@ -5,6 +5,8 @@ document.addEventListener("DOMContentLoaded", function() {
             <a href="index.html">🏠 홈</a>
             <a href="uuid.html">🔑 UUID 생성기</a>
             <a href="json.html">📋 JSON 포맷터</a>
+            <a href="base64.html">🔄 Base64 인/디코더</a>
+            <a href="timestamp.html">⏱️ 타임스탬프</a>
         </nav>
     `;
 
