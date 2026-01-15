@@ -7,6 +7,8 @@ document.addEventListener("DOMContentLoaded", function() {
             <a href="json.html">📋 JSON 포맷터</a>
             <a href="base64.html">🔄 Base64 인/디코더</a>
             <a href="timestamp.html">⏱️ 타임스탬프</a>
+            <a href="youtube.html">📺 유투브 썸네일</a>
+            <a href="password.html">🔐 비밀번호 생성기</a>
         </nav>
     `;
 

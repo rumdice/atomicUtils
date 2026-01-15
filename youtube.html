@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>유튜브 썸네일 추출기 - 고화질 다운로드</title>
+    
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/common.js"></script>
+
+    <style>
+        .input-area { display: flex; gap: 10px; margin-bottom: 30px; }
+        .input-area input { flex: 1; padding: 15px; font-size: 16px; border: 2px solid #ddd; border-radius: 5px; }
+        .input-area button { padding: 15px 30px; font-size: 16px; font-weight: bold; background-color: #e74c3c; } /* 유튜브 레드 컬러 */
+        .input-area button:hover { background-color: #c0392b; }
+
+        .thumbnail-list { display: none; flex-direction: column; gap: 40px; }
+        .thumb-item { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
+        .thumb-item h3 { margin-top: 0; color: #333; }
+        .thumb-item img { max-width: 100%; height: auto; border-radius: 5px; margin: 15px 0; border: 1px solid #eee; }
+        
+        .download-btn {
+            display: inline-block; padding: 10px 20px; background-color: #3498db; color: white; 
+            text-decoration: none; border-radius: 5px; font-weight: bold; margin-top: 5px;
+        }
+        .download-btn:hover { background-color: #2980b9; }
+
+        @media (max-width: 768px) {
+            .input-area { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="tool-box">
+            <h2 style="text-align: center;">📺 유튜브 썸네일 추출기</h2>
+            <p style="text-align: center; color: #666; margin-bottom: 30px;">
+                영상 주소만 입력하면 고화질 썸네일을 바로 저장할 수 있습니다.
+            </p>
+
+            <div class="input-area">
+                <input type="text" id="youtubeUrl" placeholder="예: https://www.youtube.com/watch?v=..." onkeyup="if(window.event.keyCode==13){extract()}">
+                <button onclick="extract()">추출하기</button>
+            </div>
+
+            <div id="resultArea" class="thumbnail-list">
+                
+                <div class="thumb-item">
+                    <h3>🌟 최대 고화질 (Max Resolution)</h3>
+                    <p>가장 품질이 좋은 이미지입니다. (4K/HD 지원 영상만 가능)</p>
+                    <img id="imgMax" src="" alt="썸네일 없음">
+                    <br>
+                    <a id="btnMax" href="#" target="_blank" class="download-btn" download>이미지 저장 (새창 열기)</a>
+                </div>
+
+                <div class="thumb-item">
+                    <h3>📷 표준 화질 (Standard)</h3>
+                    <p>대부분의 영상에서 기본으로 제공하는 화질입니다. (640x480)</p>
+                    <img id="imgStd" src="" alt="썸네일 없음">
+                    <br>
+                    <a id="btnStd" href="#" target="_blank" class="download-btn" download>이미지 저장 (새창 열기)</a>
+                </div>
+
+                <div class="thumb-item">
+                    <h3>📱 중간 화질 (Medium)</h3>
+                    <p>블로그 본문이나 작은 미리보기에 적합합니다. (320x180)</p>
+                    <img id="imgMed" src="" alt="썸네일 없음">
+                    <br>
+                    <a id="btnMed" href="#" target="_blank" class="download-btn" download>이미지 저장 (새창 열기)</a>
+                </div>
+
+            </div>
+        </div>
+
+        <div style="margin-top: 50px; line-height: 1.6; color: #444;">
+            <h3>사용 팁</h3>
+            <p>유튜브 영상 링크(URL)를 복사해서 위 입력창에 붙여넣기 하세요. 
+            <code>youtu.be</code>, <code>youtube.com/watch?v=</code> 등 모든 형식을 지원합니다.</p>
+        </div>
+    </div>
+
+    <script>
+        function extract() {
+            const url = document.getElementById('youtubeUrl').value.trim();
+            const resultArea = document.getElementById('resultArea');
+            
+            if (!url) return alert("유튜브 주소를 입력해주세요.");
+
+            // 1. 영상 ID 추출 (정규표현식)
+            // 지원 형식: youtube.com/watch?v=ID, youtu.be/ID, youtube.com/embed/ID 등
+            const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+            const match = url.match(regExp);
+            
+            if (match && match[7].length == 11) {
+                const videoId = match[7];
+
+                // 2. 이미지 URL 생성
+                // 유튜브 썸네일 서버 주소 규칙: https://img.youtube.com/vi/[ID]/[화질].jpg
+                const maxRes = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+                const stdRes = `https://img.youtube.com/vi/${videoId}/sddefault.jpg`;
+                const medRes = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+
+                // 3. 화면에 뿌리기
+                updateImage('imgMax', 'btnMax', maxRes);
+                updateImage('imgStd', 'btnStd', stdRes);
+                updateImage('imgMed', 'btnMed', medRes);
+
+                resultArea.style.display = 'flex';
+            } else {
+                alert("올바른 유튜브 주소가 아닙니다. 다시 확인해주세요.");
+                resultArea.style.display = 'none';
+            }
+        }
+
+        function updateImage(imgId, btnId, src) {
+            const img = document.getElementById(imgId);
+            const btn = document.getElementById(btnId);
+
+            img.src = src;
+            btn.href = src; // 다운로드 링크 연결
+            
+            // 이미지 로드 실패 시 (예: 고화질이 없는 옛날 영상) 처리
+            img.onerror = function() {
+                this.src = "https://via.placeholder.com/640x360?text=No+Image";
+                btn.style.display = 'none'; // 다운로드 버튼 숨김
+            };
+            btn.style.display = 'inline-block'; // 버튼 다시 보이기
+        }
+    </script>
+</body>
+</html>
