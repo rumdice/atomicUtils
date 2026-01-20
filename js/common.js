@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", function() {
             <a href="youtube.html">📺 유투브 썸네일</a>
             <a href="password.html">🔐 비밀번호 생성기</a>
             <a href="shorturl.html">🔗 단축 URL</a>
+            <a href="myip.html">🌐 내 IP</a>
         </nav>
     `;
 

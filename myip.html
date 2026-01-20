@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내 IP 및 위치 확인 - My IP & Location</title>
+    
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/common.js"></script>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        .ip-card {
+            background: linear-gradient(135deg, #2c3e50, #4ca1af); /* 고급스러운 다크 그라데이션 */
+            border-radius: 15px;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            margin-bottom: 30px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ip-label { font-size: 14px; opacity: 0.8; margin-bottom: 5px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; }
+        
+        .ip-address {
+            font-size: 42px;
+            font-weight: 800;
+            margin: 10px 0;
+            font-family: 'Consolas', monospace;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            word-break: break-all;
+        }
+
+        .location-text { font-size: 18px; margin-top: 5px; opacity: 0.9; font-weight: 300; }
+
+        /* 지도 영역 */
+        #map {
+            height: 400px;
+            width: 100%;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 1px solid #ddd;
+            z-index: 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        /* 정보 테이블 */
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+        }
+        .info-table th, .info-table td { padding: 18px; text-align: left; border-bottom: 1px solid #f0f0f0; }
+        .info-table th { background-color: #f9fafb; width: 30%; color: #555; font-weight: 600; }
+        .info-table td { font-family: 'Consolas', monospace; color: #333; }
+        .info-table tr:last-child th, .info-table tr:last-child td { border-bottom: none; }
+
+        /* 로딩 스피너 */
+        .spinner {
+            display: inline-block;
+            width: 30px; height: 30px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="tool-box">
+            <h2 style="text-align: center; margin-bottom: 20px;">🌐 IP & 위치 추적</h2>
+
+            <div class="ip-card">
+                <div class="ip-label">Your Public IP Address</div>
+                <div class="ip-address" id="ipDisplay">
+                    <div class="spinner"></div> </div>
+                <div class="location-text" id="locDisplay">Scanning Network...</div>
+            </div>
+
+            <div id="map"></div>
+
+            <h3 style="margin-left: 5px; color: #34495e;">📡 상세 네트워크 정보</h3>
+            <table class="info-table">
+                <tr><th>ISP (통신사)</th><td id="ispDisplay">-</td></tr>
+                <tr><th>Client Info</th><td id="uaDisplay">-</td></tr>
+                <tr><th>Coordinates</th><td id="coordDisplay">-</td></tr>
+                <tr><th>Timezone</th><td id="tzDisplay">-</td></tr>
+            </table>
+        </div>
+
+        <div style="margin-top: 40px; line-height: 1.6; color: #444; font-size: 14px;">
+            <h3>ℹ️ 개발자 노트</h3>
+            <p>
+                현재 이 기능은 외부 GeoIP API를 사용하여 구현되었습니다. 
+                추후 자체 구축된 <strong>C# High-Performance Backend</strong> 서버로 전환될 예정입니다. 
+                (위치 정보는 통신사 서버 기준으로 표시되므로 실제 주소와 차이가 있을 수 있습니다.)
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================================
+        // [설정] 백엔드 교체 시 여기만 수정하면 됩니다.
+        // ==========================================================
+        const USE_MY_BACKEND = false; // true로 바꾸면 내 서버 사용
+        const MY_BACKEND_URL = "http://localhost:5000/api/myip"; 
+        
+        // 외부 무료 API (ipapi.co: 별도 키 없이 사용 가능, JSON 리턴)
+        const EXTERNAL_API_URL = "https://ipapi.co/json/"; 
+
+        // ==========================================================
+
+        async function initMyIp() {
+            const ipDisplay = document.getElementById('ipDisplay');
+            const locDisplay = document.getElementById('locDisplay');
+
+            try {
+                let data;
+
+                if (USE_MY_BACKEND) {
+                    // [PLAN B] 나중에 C# 서버 완성 후 실행될 코드
+                    // 서버 응답 예시: { ip: "1.1.1.1", city: "Seoul", lat: 37.5, lon: 127.0, org: "KT" }
+                    const response = await fetch(MY_BACKEND_URL);
+                    data = await response.json();
+                } else {
+                    // [PLAN A] 현재: 외부 API 사용
+                    const response = await fetch(EXTERNAL_API_URL);
+                    if (!response.ok) throw new Error("API Rate Limit or Blocked");
+                    data = await response.json();
+                }
+
+                // 1. UI 데이터 바인딩
+                ipDisplay.innerText = data.ip;
+                locDisplay.innerText = `${data.city}, ${data.region}, ${data.country_name}`;
+                document.getElementById('ispDisplay').innerText = data.org || data.asn; // 통신사
+                document.getElementById('coordDisplay').innerText = `${data.latitude}, ${data.longitude}`;
+                document.getElementById('tzDisplay').innerText = data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+                // 2. 지도 그리기
+                renderMap(data.latitude, data.longitude, data.city);
+
+            } catch (error) {
+                console.error(error);
+                ipDisplay.innerText = "조회 실패";
+                locDisplay.innerHTML = "<span style='color:#ffcccb; font-size:14px;'>광고 차단 기능을 끄거나 잠시 후 다시 시도해주세요.</span>";
+                
+                // 에러 시 기본 서울 좌표로 지도라도 보여줌
+                renderMap(37.5665, 126.9780, "Default Location");
+            }
+        }
+
+        // 지도 렌더링 (Leaflet.js)
+        function renderMap(lat, lng, label) {
+            // 지도가 이미 있으면 삭제하고 다시 그림 (새로고침 등 고려)
+            if (window.myLeafletMap) {
+                window.myLeafletMap.remove();
+            }
+
+            const map = L.map('map').setView([lat, lng], 13);
+            window.myLeafletMap = map; // 전역 변수에 저장
+
+            // OpenStreetMap 타일 레이어
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap',
+                maxZoom: 19
+            }).addTo(map);
+
+            // 마커 및 팝업
+            L.marker([lat, lng]).addTo(map)
+                .bindPopup(`<b>${label}</b><br>Network Location`)
+                .openPopup();
+        }
+
+        // 클라이언트 정보 분석 (User Agent) - 프론트엔드 전용 로직
+        function analyzeClientInfo() {
+            const ua = navigator.userAgent;
+            let os = "Unknown OS";
+            
+            if (ua.indexOf("Win") !== -1) os = "Windows";
+            else if (ua.indexOf("Mac") !== -1) os = "macOS";
+            else if (ua.indexOf("Linux") !== -1) os = "Linux";
+            else if (ua.indexOf("Android") !== -1) os = "Android";
+            else if (ua.indexOf("iPhone") !== -1) os = "iOS";
+
+            let browser = "Unknown Browser";
+            if (ua.indexOf("Chrome") !== -1) browser = "Chrome";
+            if (ua.indexOf("Safari") !== -1 && ua.indexOf("Chrome") === -1) browser = "Safari";
+            if (ua.indexOf("Firefox") !== -1) browser = "Firefox";
+
+            document.getElementById('uaDisplay').innerText = `${os} / ${browser}`;
+        }
+
+        // 실행
+        initMyIp();
+        analyzeClientInfo();
+
+    </script>
+</body>
+</html>
