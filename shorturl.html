@@ -123,6 +123,32 @@
             </div>
         </div>
 
+        <div class="tool-box" style="margin-top: 30px; border-top: 2px dashed #eee; padding-top: 30px;">
+            <h3>📊 조회수 확인하기</h3>
+            <p style="color: #666; margin-bottom: 15px;">단축 코드(URL 뒷부분 6자리)를 입력하세요.</p>
+            
+            <div class="input-group">
+                <input type="text" id="statCodeInput" placeholder="예: abc1234" style="flex:1;">
+                <button onclick="checkStats()" style="background-color: #9b59b6; color: white;">조회</button>
+            </div>
+        
+            <div id="statResult" style="display:none; margin-top:20px; background:#f9f9f9; padding:20px; border-radius:10px;">
+                <div style="font-size: 14px; color:#888;">원본 URL</div>
+                <div id="statOriginal" style="word-break:break-all; font-weight:bold; margin-bottom:10px;">-</div>
+        
+                <div style="display:flex; justify-content:space-around; text-align:center;">
+                    <div>
+                        <div style="font-size:12px; color:#888;">총 클릭수</div>
+                        <div id="statCount" style="font-size:24px; color:#e74c3c; font-weight:800;">0</div>
+                    </div>
+                    <div>
+                        <div style="font-size:12px; color:#888;">생성일</div>
+                        <div id="statDate" style="font-size:16px; color:#2c3e50; margin-top:5px;">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div style="margin-top: 50px; line-height: 1.6; color: #444;">
             <h3>URL 단축이란?</h3>
             <p>너무 길어서 공유하기 힘든 링크를 짧은 주소로 변환해 주는 서비스입니다. SMS 전송이나 소셜 미디어 공유 시 유용하며, QR코드로 변환하여 오프라인 마케팅에도 활용할 수 있습니다.</p>
@@ -244,6 +270,46 @@
             const url = document.getElementById('shortUrlDisplay').innerText;
             window.open(url, '_blank');
         }
+
+
+        // [추가] 통계 조회 함수
+        async function checkStats() {
+            const codeInput = document.getElementById('statCodeInput');
+            const resultBox = document.getElementById('statResult');
+            const code = codeInput.value.trim(); // URL 전체를 넣어도 코드만 뽑아내게 하면 더 좋음 (지금은 코드만 입력 가정)
+
+            if (!code) {
+                alert("코드를 입력해주세요.");
+                return;
+            }
+
+            // 포트 번호 확인! (5080)
+            const STAT_API_URL = `http://localhost:5080/util/stats/${code}`;
+
+            try {
+                const response = await fetch(STAT_API_URL);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    document.getElementById('statOriginal').innerText = data.originalUrl;
+                    document.getElementById('statCount').innerText = data.clickCount + "회";
+                    // 날짜 예쁘게 포맷팅
+                    const date = new Date(data.createdAt);
+                    document.getElementById('statDate').innerText = date.toLocaleDateString() + " " + date.toLocaleTimeString();
+
+                    resultBox.style.display = 'block';
+                } else {
+                    alert("정보를 찾을 수 없습니다. 코드를 확인해주세요.");
+                    resultBox.style.display = 'none';
+                }
+            } catch (e) {
+                console.error(e);
+                alert("서버 통신 오류");
+            }
+        }
+
+
     </script>
 </body>
 </html>
