@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>실시간 주식 거래소 - My Tools</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/common.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
+
+    <style>
+        .exchange-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        .order-box {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 20px;
+            width: 300px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        .order-box h3 { text-align: center; margin-bottom: 15px; }
+        .ask-title { color: #2980b9; }
+        .bid-title { color: #c0392b; }
+        
+        ul { list-style: none; padding: 0; margin: 0; }
+        li { 
+            padding: 10px; 
+            border-bottom: 1px solid #eee; 
+            display: flex; 
+            justify-content: space-between; 
+            font-family: monospace;
+            font-size: 16px;
+        }
+        li:last-child { border-bottom: none; }
+        
+        .price { font-weight: bold; }
+        
+        #logArea {
+            margin-top: 30px;
+            background: #2c3e50;
+            color: #2ecc71;
+            padding: 15px;
+            border-radius: 8px;
+            height: 150px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            background-color: #95a5a6; /* 기본 회색 */
+            color: white;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📈 실시간 주식 거래소</h1>
+        <p>웹소켓(SignalR)을 이용한 초고속 호가창 중계 시스템입니다.</p>
+        
+        <div style="text-align: center;">
+            <span id="statusBadge" class="status-badge">🔴 연결 끊김</span>
+        </div>
+
+        <div class="exchange-container">
+            <div class="order-box">
+                <h3 class="ask-title">파란불 (매도)</h3>
+                <ul id="asksList">
+                    <li style="color:#ccc; justify-content:center;">데이터 대기중...</li>
+                </ul>
+            </div>
+            
+            <div class="order-box">
+                <h3 class="bid-title">빨간불 (매수)</h3>
+                <ul id="bidsList">
+                    <li style="color:#ccc; justify-content:center;">데이터 대기중...</li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="logArea">
+            <div>시스템 로그가 여기에 표시됩니다...</div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // 🔥 [중요] Level 3 서버 주소 (포트번호 확인 필수!)
+        // ============================================================
+        const LEVEL3_SERVER_URL = "http://localhost:5189/hubs/matching";
+
+        // 1. SignalR 연결 객체 생성
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl(LEVEL3_SERVER_URL)
+            .withAutomaticReconnect() // 연결 끊기면 자동 재접속 시도
+            .build();
+
+        // 2. 데이터 수신 (호가창 스냅샷)
+        connection.on("ReceiveOrderBook", (snapshot) => {
+            renderList("asksList", snapshot.asks, "blue");
+            renderList("bidsList", snapshot.bids, "red");
+        });
+
+        // 3. 로그 수신
+        connection.on("ReceiveLog", (msg) => {
+            const logArea = document.getElementById("logArea");
+            const time = new Date().toLocaleTimeString();
+            logArea.innerHTML += `<div>[${time}] ${msg}</div>`;
+            logArea.scrollTop = logArea.scrollHeight;
+        });
+
+        // 4. 연결 시작
+        async function startConnection() {
+            const badge = document.getElementById("statusBadge");
+            try {
+                await connection.start();
+                console.log("SignalR Connected!");
+                badge.innerText = "🟢 실시간 연결됨";
+                badge.style.backgroundColor = "#27ae60";
+                
+                // 로그창에 메시지 추가
+                document.getElementById("logArea").innerHTML += `<div>[System] 서버(${LEVEL3_SERVER_URL})에 연결되었습니다.</div>`;
+
+            } catch (err) {
+                console.error(err);
+                badge.innerText = "🔴 연결 실패 (Level 3 서버 켜져있나요?)";
+                badge.style.backgroundColor = "#c0392b";
+                setTimeout(startConnection, 5000); // 5초 뒤 재시도
+            }
+        }
+
+        startConnection();
+
+        // [화면 그리기 헬퍼 함수]
+        function renderList(elementId, list, color) {
+            const el = document.getElementById(elementId);
+            el.innerHTML = ""; 
+            
+            if(!list || list.length === 0) {
+                el.innerHTML = `<li style="color:#ccc; justify-content:center;">주문 없음</li>`;
+                return;
+            }
+
+            // 매도는 역순으로 보여주는게 보통 호가창 느낌 (비싼게 위로? 싼게 위로? 보통 매도는 싼게 아래쪽)
+            // 여기서는 리스트 순서 그대로 출력
+            list.forEach(item => {
+                const li = document.createElement("li");
+                li.innerHTML = `
+                    <span class="price" style="color:${color}">${item.price.toLocaleString()} 원</span>
+                    <span>${item.quantity.toLocaleString()} 개</span>
+                `;
+                el.appendChild(li);
+            });
+        }
+    </script>
+</body>
+</html>

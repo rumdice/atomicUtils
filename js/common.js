@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", function() {
             <a href="shorturl.html">🔗 단축 URL</a>
             <a href="myip.html">🌐 내 IP</a>
             <a href="color.html">🎨 색상 변환기</a>
+            <a href="exchange.html">📈 실시간 거래소</a>
         </nav>
     `;
 
