@@ -18,7 +18,13 @@ document.addEventListener("DOMContentLoaded", function() {
     // 2. 푸터 HTML
     const footerHtml = `
         <footer>
-            &copy; 2024 My Super Tools. All rights reserved.
+            <div class="footer-links">
+                <a href="about.html">소개</a>
+                <a href="privacy.html">개인정보처리방침</a>
+                <a href="terms.html">이용약관</a>
+                <a href="contact.html">문의</a>
+            </div>
+            &copy; 2026 AtomicUtils. All rights reserved.
         </footer>
     `;
 
