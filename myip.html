@@ -76,6 +76,8 @@
 </head>
 <body>
     <div class="container">
+        <div class="ad-slot">광고 영역 (Ad Placeholder)</div>
+
         <div class="tool-box">
             <h2 style="text-align: center; margin-bottom: 20px;">🌐 IP & 위치 추적</h2>
 
@@ -100,43 +102,27 @@
         <div style="margin-top: 40px; line-height: 1.6; color: #444; font-size: 14px;">
             <h3>ℹ️ 개발자 노트</h3>
             <p>
-                현재 이 기능은 외부 GeoIP API를 사용하여 구현되었습니다. 
-                추후 자체 구축된 <strong>C# High-Performance Backend</strong> 서버로 전환될 예정입니다. 
+                이 기능은 외부 GeoIP API(ipapi.co)를 사용해 브라우저에서 직접 조회합니다.
+                입력하신 정보는 저희 서버로 전송되거나 저장되지 않으며, 조회를 위해 IP 주소가 외부 API로 전달됩니다.
                 (위치 정보는 통신사 서버 기준으로 표시되므로 실제 주소와 차이가 있을 수 있습니다.)
             </p>
         </div>
+
+        <div class="ad-slot">광고 영역 (Ad Placeholder)</div>
     </div>
 
     <script>
-        // ==========================================================
-        // [설정] 백엔드 교체 시 여기만 수정하면 됩니다.
-        // ==========================================================
-        const USE_MY_BACKEND = true; // true로 바꾸면 내 서버 사용
-        const MY_BACKEND_URL = "http://localhost:5080/util/myip"; 
-        
         // 외부 무료 API (ipapi.co: 별도 키 없이 사용 가능, JSON 리턴)
-        const EXTERNAL_API_URL = "https://ipapi.co/json/"; 
-
-        // ==========================================================
+        const EXTERNAL_API_URL = "https://ipapi.co/json/";
 
         async function initMyIp() {
             const ipDisplay = document.getElementById('ipDisplay');
             const locDisplay = document.getElementById('locDisplay');
 
             try {
-                let data;
-
-                if (USE_MY_BACKEND) {
-                    // [PLAN B] 나중에 C# 서버 완성 후 실행될 코드
-                    // 서버 응답 예시: { ip: "1.1.1.1", city: "Seoul", lat: 37.5, lon: 127.0, org: "KT" }
-                    const response = await fetch(MY_BACKEND_URL);
-                    data = await response.json();
-                } else {
-                    // [PLAN A] 현재: 외부 API 사용
-                    const response = await fetch(EXTERNAL_API_URL);
-                    if (!response.ok) throw new Error("API Rate Limit or Blocked");
-                    data = await response.json();
-                }
+                const response = await fetch(EXTERNAL_API_URL);
+                if (!response.ok) throw new Error("API Rate Limit or Blocked");
+                const data = await response.json();
 
                 // 1. UI 데이터 바인딩
                 ipDisplay.innerText = data.ip;
