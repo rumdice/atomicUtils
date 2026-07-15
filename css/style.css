@@ -19,11 +19,12 @@ footer { text-align: center; padding: 20px; background-color: #ddd; color: #666;
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #eee;
-    border: 1px dashed #ccc;
+    background-color: #fff8e1;
+    border: 2px dashed #f0ad4e;
     border-radius: 8px;
-    color: #999;
-    font-size: 13px;
+    color: #b8860b;
+    font-size: 14px;
+    font-weight: bold;
 }
 
 /* 각 도구별 박스 스타일 */
