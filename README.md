@@ -2,7 +2,7 @@
 
 개발자와 실무자가 자주 쓰는 웹 유틸리티 도구를 브라우저에서 바로 무료로 사용할 수 있는 정적 사이트입니다. 회원가입, 설치, 서버 없이 대부분의 기능이 브라우저 내부에서 동작합니다.
 
-🔗 **Live:** https://rumdice.github.io/atomicUtils/
+🔗 **Live:** https://tools.rumdice.com/
 
 ## 제공하는 도구
 

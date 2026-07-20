@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://rumdice.github.io/atomicUtils/sitemap.xml
+Sitemap: https://tools.rumdice.com/sitemap.xml

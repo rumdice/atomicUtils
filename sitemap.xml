@@ -1,59 +1,59 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-        <loc>https://rumdice.github.io/atomicUtils/index.html</loc>
+        <loc>https://tools.rumdice.com/index.html</loc>
         <priority>1.0</priority>
     </url>
     <url>
-        <loc>https://rumdice.github.io/atomicUtils/json.html</loc>
+        <loc>https://tools.rumdice.com/json.html</loc>
         <priority>0.8</priority>
     </url>
     <url>
-        <loc>https://rumdice.github.io/atomicUtils/uuid.html</loc>
+        <loc>https://tools.rumdice.com/uuid.html</loc>
         <priority>0.8</priority>
     </url>
     <url>
-        <loc>https://rumdice.github.io/atomicUtils/base64.html</loc>
+        <loc>https://tools.rumdice.com/base64.html</loc>
         <priority>0.8</priority>
     </url>
     <url>
-        <loc>https://rumdice.github.io/atomicUtils/timestamp.html</loc>
+        <loc>https://tools.rumdice.com/timestamp.html</loc>
         <priority>0.8</priority>
     </url>
     <url>
-        <loc>https://rumdice.github.io/atomicUtils/youtube.html</loc>
+        <loc>https://tools.rumdice.com/youtube.html</loc>
         <priority>0.8</priority>
     </url>
     <url>
-        <loc>https://rumdice.github.io/atomicUtils/password.html</loc>
+        <loc>https://tools.rumdice.com/password.html</loc>
         <priority>0.8</priority>
     </url>
     <url>
-        <loc>https://rumdice.github.io/atomicUtils/shorturl.html</loc>
+        <loc>https://tools.rumdice.com/shorturl.html</loc>
         <priority>0.8</priority>
     </url>
     <url>
-        <loc>https://rumdice.github.io/atomicUtils/myip.html</loc>
+        <loc>https://tools.rumdice.com/myip.html</loc>
         <priority>0.8</priority>
     </url>
     <url>
-        <loc>https://rumdice.github.io/atomicUtils/color.html</loc>
+        <loc>https://tools.rumdice.com/color.html</loc>
         <priority>0.8</priority>
     </url>
     <url>
-        <loc>https://rumdice.github.io/atomicUtils/about.html</loc>
+        <loc>https://tools.rumdice.com/about.html</loc>
         <priority>0.3</priority>
     </url>
     <url>
-        <loc>https://rumdice.github.io/atomicUtils/privacy.html</loc>
+        <loc>https://tools.rumdice.com/privacy.html</loc>
         <priority>0.3</priority>
     </url>
     <url>
-        <loc>https://rumdice.github.io/atomicUtils/terms.html</loc>
+        <loc>https://tools.rumdice.com/terms.html</loc>
         <priority>0.3</priority>
     </url>
     <url>
-        <loc>https://rumdice.github.io/atomicUtils/contact.html</loc>
+        <loc>https://tools.rumdice.com/contact.html</loc>
         <priority>0.3</priority>
     </url>
 </urlset>
