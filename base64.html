@@ -64,9 +64,34 @@
             </div>
         </div>
 
-        <div style="margin-top: 50px; line-height: 1.6; color: #444;">
+        <div style="margin-top: 50px; line-height: 1.8; color: #444;">
             <h3>Base64란?</h3>
-            <p>바이너리 데이터(이미지, 파일 등)를 ASCII 문자열로 바꾸는 인코딩 방식입니다. 주로 이메일 첨부파일 전송이나, 웹 API 인증(Basic Auth) 등에 사용됩니다.</p>
+            <p>
+                Base64는 바이너리 데이터(이미지, 파일, 암호화된 바이트열 등)를 A-Z, a-z, 0-9, +, / 총 64개의 ASCII 문자만으로
+                표현하는 인코딩 방식입니다. 이메일이나 URL, JSON처럼 텍스트만 안전하게 전달할 수 있는 통로로 바이너리 데이터를
+                보내야 할 때 사용합니다. 이름과 달리 <strong>암호화가 아니라 인코딩</strong>이므로, 누구나 디코딩해서 원본을 그대로
+                복원할 수 있어 비밀번호나 민감한 정보를 숨기는 용도로는 적합하지 않습니다.
+            </p>
+
+            <h3>실제로 언제 쓰이나요?</h3>
+            <ul>
+                <li><strong>HTTP Basic 인증:</strong> <code>Authorization: Basic {base64(아이디:비밀번호)}</code> 형태로 헤더에 자격 증명을 담을 때.</li>
+                <li><strong>이미지 인라인 삽입(Data URI):</strong> 작은 아이콘을 별도 요청 없이 <code>&lt;img src="data:image/png;base64,..."&gt;</code> 형태로 HTML/CSS에 직접 심을 때.</li>
+                <li><strong>JWT(JSON Web Token):</strong> 토큰의 Header/Payload 부분이 Base64URL로 인코딩되어 있어, 내용을 직접 눈으로 확인하고 싶을 때.</li>
+                <li><strong>이메일 첨부파일 전송:</strong> SMTP는 원래 텍스트만 전송할 수 있어, 첨부파일을 Base64로 바꿔 메일 본문에 실어 보냅니다.</li>
+            </ul>
+
+            <h3>자주 묻는 질문</h3>
+            <p><strong>Q. 디코딩하면 한글이 깨져요.</strong><br>
+            일반 <code>btoa()</code>/<code>atob()</code>는 ASCII 범위 밖의 문자(한글 등)를 그대로 처리하지 못해 오류가 납니다.
+            이 도구는 <code>encodeURIComponent</code>로 UTF-8 바이트로 먼저 변환한 뒤 인코딩하므로 한글·이모지도 깨지지 않고 정확히 왕복 변환됩니다.</p>
+            <p><strong>Q. Base64로 인코딩하면 원본보다 용량이 커지나요?</strong><br>
+            네, 약 33% 정도 커집니다. 3바이트의 원본 데이터를 4개의 문자로 표현하는 방식이라 텍스트로 전달해야 하는 상황이 아니라면
+            굳이 Base64를 거칠 필요는 없습니다.</p>
+            <p><strong>Q. Base64와 URL 인코딩은 같은 건가요?</strong><br>
+            다릅니다. Base64는 바이너리 데이터를 문자로 바꾸는 인코딩이고, URL 인코딩(퍼센트 인코딩)은 URL에 쓸 수 없는 특수문자를 이스케이프하는 방식입니다.
+            다만 Base64 결과에 포함된 <code>+</code>, <code>/</code>는 URL에서 특별한 의미를 가지므로, URL에 넣을 땐 <code>-</code>, <code>_</code>로 치환한
+            "Base64URL" 방식을 따로 사용합니다.</p>
         </div>
 
         <div class="ad-slot">광고 영역 (Ad Placeholder)</div>

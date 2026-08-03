@@ -183,6 +183,51 @@
             </div>
         </div>
 
+        <div class="tool-box color-converter-container" style="margin-top: 30px;">
+            <h2 style="text-align: center;">🔍 명도 대비(WCAG) 접근성 체커</h2>
+            <p style="text-align: center; color: #666; margin-bottom: 20px;">
+                텍스트 색상과 배경 색상의 대비가 웹 접근성 기준(WCAG)을 통과하는지 확인하세요.
+            </p>
+
+            <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
+                <div class="format-box" style="flex: 1; min-width: 180px;">
+                    <label>텍스트 색상 (HEX)</label>
+                    <input type="text" id="fgInput" value="#333333" oninput="updateContrast()" maxlength="7">
+                </div>
+                <div class="format-box" style="flex: 1; min-width: 180px;">
+                    <label>배경 색상 (HEX)</label>
+                    <input type="text" id="bgInput" value="#FFFFFF" oninput="updateContrast()" maxlength="7">
+                </div>
+            </div>
+
+            <div id="contrastPreview" style="margin-top: 20px; padding: 30px; border-radius: 10px; text-align: center; border: 2px solid #eee;">
+                <span style="font-size: 28px; font-weight: bold;">Aa 예시 텍스트 Sample Text</span>
+            </div>
+
+            <div style="margin-top: 20px; text-align: center;">
+                <div style="font-size: 22px; font-weight: bold; color: #2c3e50;">대비율: <span id="ratioValue">-</span> : 1</div>
+            </div>
+
+            <div id="wcagResults" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px;">
+                <div class="format-box" style="text-align: center;">
+                    <label>일반 텍스트 AA (4.5:1 이상)</label>
+                    <span id="badgeNormalAA" style="font-weight: bold;">-</span>
+                </div>
+                <div class="format-box" style="text-align: center;">
+                    <label>일반 텍스트 AAA (7:1 이상)</label>
+                    <span id="badgeNormalAAA" style="font-weight: bold;">-</span>
+                </div>
+                <div class="format-box" style="text-align: center;">
+                    <label>큰 텍스트 AA (3:1 이상)</label>
+                    <span id="badgeLargeAA" style="font-weight: bold;">-</span>
+                </div>
+                <div class="format-box" style="text-align: center;">
+                    <label>큰 텍스트 AAA (4.5:1 이상)</label>
+                    <span id="badgeLargeAAA" style="font-weight: bold;">-</span>
+                </div>
+            </div>
+        </div>
+
         <div class="info-section">
             <h3>색상 코드 변환이란?</h3>
             <p>
@@ -195,6 +240,23 @@
             </ul>
             <p>
                 이 도구를 사용하면 한 형식의 색상 코드를 입력하면 다른 형식으로 자동 변환되어 표시됩니다.
+                변환 결과는 위쪽 미리보기 박스에서 실제 색상으로 바로 확인할 수 있습니다.
+            </p>
+
+            <h3>명도 대비(Contrast Ratio)와 WCAG 기준</h3>
+            <p>
+                텍스트와 배경의 색이 너무 비슷하면 저시력자나 색각 이상이 있는 사용자는 물론, 밝은 야외 환경에서 화면을 보는
+                일반 사용자도 글자를 읽기 어렵습니다. W3C의 웹 콘텐츠 접근성 지침(WCAG)은 이를 수치로 규정합니다.
+                밝기가 가장 밝은 색과 가장 어두운 색의 상대 휘도(relative luminance)를 비교해 <strong>1:1(구분 불가)부터 21:1(흰색과 검은색)</strong>
+                사이의 대비율을 계산하고, 아래 기준을 통과해야 접근성을 준수한 것으로 봅니다.
+            </p>
+            <ul>
+                <li><strong>AA (최소 기준):</strong> 일반 텍스트 4.5:1 이상, 18pt 이상(또는 14pt 굵게)의 큰 텍스트는 3:1 이상.</li>
+                <li><strong>AAA (권장 기준):</strong> 일반 텍스트 7:1 이상, 큰 텍스트 4.5:1 이상.</li>
+            </ul>
+            <p>
+                공공기관 웹사이트나 앱은 법적으로 AA 기준 준수를 요구받는 경우가 많고, 일반 서비스에서도 버튼 글씨, 안내 문구가
+                기준을 통과하지 못하면 실사용자 이탈로 이어지기 쉬워 디자인 단계에서 미리 확인하는 것이 좋습니다.
             </p>
         </div>
 
@@ -407,7 +469,63 @@
         // 초기화: 기본 색상 설정
         window.addEventListener('DOMContentLoaded', () => {
             updateAllFormats(52, 152, 219); // #3498db
+            updateContrast();
         });
+
+        // --- WCAG 명도 대비 체커 ---
+        function hexToRgbObj(hex) {
+            const clean = hex.replace('#', '').trim();
+            if (clean.length !== 6 || !/^[0-9A-Fa-f]{6}$/.test(clean)) return null;
+            return {
+                r: parseInt(clean.substr(0, 2), 16),
+                g: parseInt(clean.substr(2, 2), 16),
+                b: parseInt(clean.substr(4, 2), 16)
+            };
+        }
+
+        // WCAG 상대 휘도(relative luminance) 계산
+        function relativeLuminance({ r, g, b }) {
+            const toLinear = (c) => {
+                c /= 255;
+                return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+            };
+            return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+        }
+
+        function contrastRatio(rgb1, rgb2) {
+            const l1 = relativeLuminance(rgb1);
+            const l2 = relativeLuminance(rgb2);
+            const lighter = Math.max(l1, l2);
+            const darker = Math.min(l1, l2);
+            return (lighter + 0.05) / (darker + 0.05);
+        }
+
+        function setBadge(elId, passed) {
+            const el = document.getElementById(elId);
+            el.innerText = passed ? '✅ 통과' : '❌ 미달';
+            el.style.color = passed ? '#27ae60' : '#e74c3c';
+        }
+
+        function updateContrast() {
+            const fgHex = document.getElementById('fgInput').value;
+            const bgHex = document.getElementById('bgInput').value;
+            const fg = hexToRgbObj(fgHex);
+            const bg = hexToRgbObj(bgHex);
+            if (!fg || !bg) return;
+
+            const ratio = contrastRatio(fg, bg);
+
+            const preview = document.getElementById('contrastPreview');
+            preview.style.backgroundColor = bgHex;
+            preview.querySelector('span').style.color = fgHex;
+
+            document.getElementById('ratioValue').innerText = ratio.toFixed(2);
+
+            setBadge('badgeNormalAA', ratio >= 4.5);
+            setBadge('badgeNormalAAA', ratio >= 7);
+            setBadge('badgeLargeAA', ratio >= 3);
+            setBadge('badgeLargeAAA', ratio >= 4.5);
+        }
     </script>
 </body>
 </html>

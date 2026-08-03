@@ -15,17 +15,57 @@
 
         <div class="tool-box" style="text-align: center;">
             <h2>🔑 랜덤 UUID 생성기</h2>
-            <p>버튼을 누르면 새로운 UUID가 생성됩니다.</p>
-            
+            <p>버튼을 누르면 새로운 UUID(v4)가 생성됩니다.</p>
+
             <input type="text" id="uuidResult" style="width: 80%; text-align: center;" readonly>
             <br><br>
             <button onclick="generate()">생성하기</button>
             <button onclick="copy()" style="background-color: #27ae60;">복사하기</button>
+
+            <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #eee;">
+                <label for="bulkCount" style="font-weight: bold; color: #555;">여러 개 한번에 생성</label>
+                <br>
+                <input type="number" id="bulkCount" min="1" max="1000" value="10" style="width: 80px; text-align: center; margin: 8px 0;">
+                <button onclick="generateBulk()">일괄 생성</button>
+                <button onclick="copyBulk()" style="background-color: #27ae60;">전체 복사</button>
+                <textarea id="bulkResult" readonly style="width: 80%; height: 140px; margin-top: 10px; font-family: 'Consolas', monospace; font-size: 13px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; display: none;"></textarea>
+            </div>
         </div>
 
-        <div style="margin-top: 40px; line-height: 1.6;">
+        <div style="margin-top: 40px; line-height: 1.8; color: #444;">
             <h3>UUID란?</h3>
-            <p>범용 고유 식별자(Universally Unique Identifier)는 네트워크 상에서 중복되지 않는 ID를 만들기 위한 표준입니다...</p>
+            <p>
+                UUID(Universally Unique Identifier, 범용 고유 식별자)는 128비트(16바이트) 크기의 숫자로,
+                중앙 서버 없이도 전 세계 어디서 생성하든 실질적으로 중복되지 않는 고유 값을 만들기 위한 표준(RFC 4122)입니다.
+                <code>xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx</code> 형태의 32자리 16진수 문자열로 표현되며,
+                총 5개 그룹을 하이픈(-)으로 구분합니다.
+            </p>
+
+            <h3>버전 종류와 이 도구가 v4를 쓰는 이유</h3>
+            <p>
+                UUID에는 여러 버전이 있습니다. v1은 생성 시각과 MAC 주소를 조합해 만들어 생성 장비를 추적할 수 있다는 단점이 있고,
+                v3/v5는 이름(문자열)을 해시해서 만들기 때문에 같은 입력이면 항상 같은 UUID가 나옵니다.
+                이 도구가 생성하는 <strong>v4</strong>는 순수하게 암호학적으로 안전한 난수(<code>crypto.randomUUID()</code>)로만 만들어져
+                생성 장비나 시간 정보가 전혀 노출되지 않고, 임의성이 가장 높아 범용 ID로 가장 널리 쓰입니다.
+            </p>
+
+            <h3>실제로 언제 쓰이나요?</h3>
+            <ul>
+                <li><strong>데이터베이스 기본 키(PK):</strong> Auto Increment 대신 UUID를 쓰면 여러 서버/샤드에서 동시에 데이터를 생성해도 ID 충돌이 없습니다.</li>
+                <li><strong>세션/API 토큰, 요청 추적 ID:</strong> 로그에서 특정 요청을 추적하는 Trace ID, 멱등성(idempotency) 키로 흔히 사용됩니다.</li>
+                <li><strong>파일명 충돌 방지:</strong> 사용자가 업로드한 파일을 저장할 때 원본 파일명 대신 UUID를 붙이면 이름이 겹칠 일이 없습니다.</li>
+                <li><strong>테스트/더미 데이터:</strong> 테스트 코드에서 매번 새로운 고유 값이 필요할 때 빠르게 생성할 수 있습니다.</li>
+            </ul>
+
+            <h3>자주 묻는 질문</h3>
+            <p><strong>Q. UUID가 겹칠 가능성은 없나요?</strong><br>
+            v4 UUID는 122비트의 임의성을 가집니다. 초당 10억 개씩 생성해도 중복이 한 번 발생할 확률이 50%가 되려면 약 100년이 걸릴 정도로,
+            실무에서는 사실상 중복되지 않는다고 간주합니다.</p>
+            <p><strong>Q. UUID 대신 Auto Increment(1, 2, 3...)를 쓰면 안 되나요?</strong><br>
+            단일 서버·단일 DB 환경이라면 Auto Increment가 더 간단하고 인덱스 성능도 좋습니다. 다만 값이 순차적이라 전체 데이터 건수나
+            다음 ID를 유추하기 쉽고, 여러 DB를 나중에 병합할 때 ID가 충돌할 수 있습니다. 분산 환경이거나 ID를 외부에 노출해야 한다면 UUID가 더 안전합니다.</p>
+            <p><strong>Q. 하이픈을 빼거나 대문자로 바꿔서 써도 되나요?</strong><br>
+            네. UUID는 32자리 16진수 값 자체가 핵심이고 하이픈은 가독성을 위한 구분자일 뿐이라, 대부분의 시스템에서 하이픈 유무나 대소문자 여부를 구분하지 않고 동일한 값으로 처리합니다.</p>
         </div>
 
         <div class="ad-slot">광고 영역 (Ad Placeholder)</div>
@@ -43,6 +83,24 @@
             alert('복사되었습니다!');
         }
         generate(); // 접속 시 자동 생성
+
+        function generateBulk() {
+            const count = Math.min(1000, Math.max(1, parseInt(document.getElementById('bulkCount').value) || 1));
+            const list = [];
+            for (let i = 0; i < count; i++) list.push(crypto.randomUUID());
+
+            const box = document.getElementById('bulkResult');
+            box.value = list.join('\n');
+            box.style.display = 'block';
+        }
+
+        function copyBulk() {
+            const box = document.getElementById('bulkResult');
+            if (!box.value) return alert('먼저 일괄 생성을 눌러주세요.');
+            box.select();
+            document.execCommand('copy');
+            alert(box.value.split('\n').length + '개의 UUID가 복사되었습니다!');
+        }
     </script>
 </body>
 </html>
