@@ -159,7 +159,7 @@
                 outputEl.value = JSON.stringify(parsed, null, 2); // 2칸 들여쓰기
                 setStatus("성공적으로 정렬되었습니다! (Valid JSON)", "success");
             } catch (e) {
-                setStatus("유효하지 않은 JSON입니다: " + e.message, "error");
+                setStatus(locateJsonError(raw, e.message), "error");
             }
         }
 
@@ -172,8 +172,31 @@
                 outputEl.value = JSON.stringify(parsed); // 공백 제거
                 setStatus("성공적으로 압축되었습니다!", "success");
             } catch (e) {
-                setStatus("유효하지 않은 JSON입니다: " + e.message, "error");
+                setStatus(locateJsonError(raw, e.message), "error");
             }
+        }
+
+        // 브라우저의 JSON.parse() 오류 메시지에서 위치 정보를 뽑아 줄/열로 안내
+        // (Chrome류: "...at position N", Firefox류: "...line L column C...")
+        function locateJsonError(rawText, message) {
+            let line = null, col = null;
+
+            let m = message.match(/position (\d+)/);
+            if (m) {
+                const pos = parseInt(m[1], 10);
+                const upTo = rawText.slice(0, pos).split('\n');
+                line = upTo.length;
+                col = upTo[upTo.length - 1].length + 1;
+            } else {
+                m = message.match(/line (\d+) column (\d+)/i);
+                if (m) {
+                    line = parseInt(m[1], 10);
+                    col = parseInt(m[2], 10);
+                }
+            }
+
+            if (line === null) return "유효하지 않은 JSON입니다: " + message;
+            return `${line}번째 줄, ${col}번째 열 부근에 오류가 있습니다: ${message}`;
         }
 
         function copyResult() {

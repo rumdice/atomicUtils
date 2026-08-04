@@ -12,11 +12,12 @@ footer { text-align: center; padding: 20px; background-color: #ddd; color: #666;
 .footer-links a { color: #555; text-decoration: none; margin: 0 10px; font-size: 13px; }
 .footer-links a:hover { text-decoration: underline; }
 
-/* 광고 플레이스홀더 슬롯 */
+/* 광고 슬롯: 실제 광고 유닛 코드로 교체하기 전까지는 화면에 노출하지 않음
+   (플레이스홀더 문구가 사용자/심사관에게 노출되지 않도록 display:none 처리) */
 .ad-slot {
+    display: none;
     margin: 30px 0;
     min-height: 100px;
-    display: flex;
     align-items: center;
     justify-content: center;
     background-color: #fff8e1;
